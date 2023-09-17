@@ -1,2 +1,3 @@
 # gopkg
-Universal Utilities for Go
+
+`gopkg` is a universal utility collection for Go.
