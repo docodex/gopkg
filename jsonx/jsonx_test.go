@@ -330,7 +330,7 @@ func TestBatchVariousPathCounts(t *testing.T) {
 				gpaths = append(gpaths, fmt.Sprintf("not%d", i))
 			}
 		}
-		results := gjson.GetMany(text, gpaths...)
+		results := jsonx.MGet(text, gpaths...)
 		for i := range paths {
 			if results[i].String() != expects[i] {
 				t.Fatalf("expected '%v', got '%v'", expects[i],
@@ -352,7 +352,7 @@ func TestBatchRecursion(t *testing.T) {
 		text += `}`
 	}
 	path = path[1:]
-	assert.True(t, gjson.GetMany(text, path)[0].String() == "b")
+	assert.True(t, jsonx.MGet(text, path)[0].String() == "b")
 }
 
 func TestByteSafety(t *testing.T) {
@@ -927,7 +927,7 @@ var manyJSON = `  {
 
 func TestManyBasic(t *testing.T) {
 	testMany := func(expect string, paths ...string) {
-		results := gjson.GetManyBytes(
+		results := jsonx.MGetBytes(
 			[]byte(manyJSON),
 			paths...,
 		)
@@ -974,9 +974,9 @@ func testManyAny(t *testing.T, json string, paths, expected []string, bytes bool
 		} else if i == 1 {
 			which = "GetMany"
 			if bytes {
-				result = gjson.GetManyBytes([]byte(json), paths...)
+				result = jsonx.MGetBytes([]byte(json), paths...)
 			} else {
-				result = gjson.GetMany(json, paths...)
+				result = jsonx.MGet(json, paths...)
 			}
 		}
 		for j := range expected {
@@ -1046,7 +1046,7 @@ func TestRandomMany(t *testing.T) {
 			}
 			paths[i] = string(b)
 		}
-		gjson.GetMany(lstr, paths...)
+		jsonx.MGet(lstr, paths...)
 	}
 }
 
@@ -1106,7 +1106,7 @@ func TestGetMany47(t *testing.T) {
 		`{"myfoo": [605]}}`
 	paths := []string{"foo.myfoo", "bar.id", "bar.mybar", "bar.mybarx"}
 	expected := []string{"[605]", "99", "my mybar", ""}
-	results := gjson.GetMany(text, paths...)
+	results := jsonx.MGet(text, paths...)
 	if len(expected) != len(results) {
 		t.Fatalf("expected %v, got %v", len(expected), len(results))
 	}
@@ -1122,7 +1122,7 @@ func TestGetMany48(t *testing.T) {
 	text := `{"bar": {"id": 99, "xyz": "my xyz"}, "foo": {"myfoo": [605]}}`
 	paths := []string{"foo.myfoo", "bar.id", "bar.xyz", "bar.abc"}
 	expected := []string{"[605]", "99", "my xyz", ""}
-	results := gjson.GetMany(text, paths...)
+	results := jsonx.MGet(text, paths...)
 	if len(expected) != len(results) {
 		t.Fatalf("expected %v, got %v", len(expected), len(results))
 	}
@@ -1165,17 +1165,17 @@ func TestNullArray(t *testing.T) {
 func TestIssue54(t *testing.T) {
 	var r []gjson.Result
 	text := `{"MarketName":null,"Nounce":6115}`
-	r = gjson.GetMany(text, "Nounce", "Buys", "Sells", "Fills")
+	r = jsonx.MGet(text, "Nounce", "Buys", "Sells", "Fills")
 	if strings.Replace(fmt.Sprintf("%v", r), " ", "", -1) != "[6115]" {
 		t.Fatalf("expected '%v', got '%v'", "[6115]",
 			strings.Replace(fmt.Sprintf("%v", r), " ", "", -1))
 	}
-	r = gjson.GetMany(text, "Nounce", "Buys", "Sells")
+	r = jsonx.MGet(text, "Nounce", "Buys", "Sells")
 	if strings.Replace(fmt.Sprintf("%v", r), " ", "", -1) != "[6115]" {
 		t.Fatalf("expected '%v', got '%v'", "[6115]",
 			strings.Replace(fmt.Sprintf("%v", r), " ", "", -1))
 	}
-	r = gjson.GetMany(text, "Nounce")
+	r = jsonx.MGet(text, "Nounce")
 	if strings.Replace(fmt.Sprintf("%v", r), " ", "", -1) != "[6115]" {
 		t.Fatalf("expected '%v', got '%v'", "[6115]",
 			strings.Replace(fmt.Sprintf("%v", r), " ", "", -1))
@@ -1184,7 +1184,7 @@ func TestIssue54(t *testing.T) {
 
 func TestIssue55(t *testing.T) {
 	text := `{"one": {"two": 2, "three": 3}, "four": 4, "five": 5}`
-	results := gjson.GetMany(text, "four", "five", "one.two", "one.six")
+	results := jsonx.MGet(text, "four", "five", "one.two", "one.six")
 	expected := []string{"4", "5", "2", ""}
 	for i, r := range results {
 		if r.String() != expected[i] {
