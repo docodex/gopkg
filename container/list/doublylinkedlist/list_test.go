@@ -436,10 +436,10 @@ func TestListPushBackAndPushFront(t *testing.T) {
 		t.Errorf("Got %v expected %v", actualValue, 3)
 	}
 	if actualValue, ok := l.Get(0); actualValue != "a" || !ok {
-		t.Errorf("Got %v expected %v", actualValue, "c")
+		t.Errorf("Got %v expected %v", actualValue, "a")
 	}
 	if actualValue, ok := l.Get(1); actualValue != "b" || !ok {
-		t.Errorf("Got %v expected %v", actualValue, "c")
+		t.Errorf("Got %v expected %v", actualValue, "b")
 	}
 	if actualValue, ok := l.Get(2); actualValue != "c" || !ok {
 		t.Errorf("Got %v expected %v", actualValue, "c")
@@ -493,7 +493,7 @@ func TestListSwap(t *testing.T) {
 	l.PushBack("b", "c")
 	l.Swap(0, 1)
 	if actualValue, ok := l.Get(0); actualValue != "b" || !ok {
-		t.Errorf("Got %v expected %v", actualValue, "c")
+		t.Errorf("Got %v expected %v", actualValue, "b")
 	}
 }
 
@@ -859,7 +859,7 @@ func TestListSerialization(t *testing.T) {
 	err = l.UnmarshalJSON(bytes)
 	assert()
 
-	bytes, err = json.Marshal([]any{"a", "b", "c", l})
+	_, err = json.Marshal([]any{"a", "b", "c", l})
 	if err != nil {
 		t.Errorf("Got error %v", err)
 	}

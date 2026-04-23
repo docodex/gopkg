@@ -19,13 +19,17 @@ Remember that there is a maximum of (63 - timeBits) bits available that can be s
 
 ## Custom Epoch
 
-By default, this package uses the Epoch of "2025-01-01 00:00:00 +0000 UTC". You can set your own epoch value by setting `epoch` to use as the epoch.
+By default, this package uses the epoch of "2026-01-01 00:00:00 +0000 UTC". You can set your own epoch value by setting `epochTimestamp`.
+
+## Custom Time Unit
+
+By default, this package uses the time unit of 1 ms. You can set your own time unit by setting `timeUnit`.
 
 ## How it Works
 
 Each time you generate an ID, it works, like this.
 
-* A timestamp with millisecond precision is stored using `timeBits` bits of the ID.
+* A timestamp with `timeUnit` millisecond(s) precision is stored using `timeBits` bits of the ID.
 * Then the node id is added in subsequent bits.
 * Then the sequence number is added, starting at 0 and incrementing for each ID generated in the same millisecond. If you generate enough IDs in the same millisecond that the sequence would roll over or overfill then the generate function will pause until the next millisecond.
 

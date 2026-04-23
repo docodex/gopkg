@@ -14,8 +14,8 @@ import (
 func verify(t *testing.T, q *priorityqueue.Queue[int], i int, less func(a, b int) bool) {
 	t.Helper()
 	elements := q.Elements()
-	j1 := i<<1 + 1 //left child
-	j2 := i<<1 + 2 //right child
+	j1 := i<<1 + 1 // left child
+	j2 := i<<1 + 2 // right child
 	if j1 < len(elements) {
 		if less(elements[j1].Value, elements[i].Value) {
 			t.Errorf("queue invariant invalidated [%d] = %d > [%d] = %d",
@@ -446,7 +446,7 @@ func TestBinaryQueueSerialization(t *testing.T) {
 	err = q.UnmarshalJSON(bytes)
 	assert()
 
-	bytes, err = json.Marshal([]any{"a", "b", "c", q})
+	_, err = json.Marshal([]any{"a", "b", "c", q})
 	if err != nil {
 		t.Errorf("Got error %v", err)
 	}

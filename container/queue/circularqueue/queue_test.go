@@ -190,7 +190,7 @@ func TestQueueSerialization(t *testing.T) {
 	err = q.UnmarshalJSON(bytes)
 	assert()
 
-	bytes, err = json.Marshal([]any{"a", "b", "c", q})
+	_, err = json.Marshal([]any{"a", "b", "c", q})
 	if err != nil {
 		t.Errorf("Got error %v", err)
 	}

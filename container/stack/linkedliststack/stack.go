@@ -4,8 +4,12 @@ package linkedliststack
 import (
 	"encoding/json"
 
+	"github.com/docodex/gopkg/container/stack"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ stack.Stack[int] = (*Stack[int])(nil)
 
 // node is a node of a linked-list stack.
 type node[T any] struct {

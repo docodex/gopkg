@@ -9,10 +9,19 @@ import (
 
 func TestNewAndAdd(t *testing.T) {
 	r := doublylinkedring.New(1, 2, 3, 4)
+	if actualValue := r.Len(); actualValue != 4 {
+		t.Errorf("Got %v expected %v", actualValue, 4)
+	}
 	fmt.Println(r.Values())
 	r.Add(8, 7, 6, 5)
+	if actualValue := r.Len(); actualValue != 8 {
+		t.Errorf("Got %v expected %v", actualValue, 8)
+	}
 	fmt.Println(r.Values())
 	r.Add(100)
+	if actualValue := r.Len(); actualValue != 9 {
+		t.Errorf("Got %v expected %v", actualValue, 9)
+	}
 	fmt.Println(r.Values())
 }
 
@@ -247,6 +256,9 @@ func TestDeleteRing(t *testing.T) {
 		if r == nil {
 			continue
 		}
+		if actualValue := r.Len(); actualValue != i {
+			t.Errorf("before Delete: r.Len() = %d, want %d", actualValue, i)
+		}
 		buf := make([]*doublylinkedring.Ring[int], 0, i)
 		buf = append(buf, r)
 		for n := r.Next(); n != r; n = n.Next() {
@@ -258,6 +270,9 @@ func TestDeleteRing(t *testing.T) {
 		}
 		fmt.Println("-------")
 		doublylinkedring.Delete(r)
+		if actualValue := r.Len(); actualValue != 1 {
+			t.Errorf("after Delete: r.Len() = %d, want 1", actualValue)
+		}
 		for _, x := range buf {
 			fmt.Printf("%4d: %p = {<- %p | %p ->}\n", i, x, x.Prev(), x.Next())
 			i++

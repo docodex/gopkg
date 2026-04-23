@@ -4,8 +4,12 @@ package arraystack
 import (
 	"encoding/json"
 
+	"github.com/docodex/gopkg/container/stack"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ stack.Stack[int] = (*Stack[int])(nil)
 
 // Stack represents an array stack which holds the elements in a slice.
 type Stack[T any] struct {
@@ -39,20 +43,26 @@ func (s *Stack[T]) String() string {
 	return "ArrayStack: " + values
 }
 
-// MarshalJSON marshals stack into valid JSON.
+// MarshalJSON marshals stack into valid JSON (in Push order, consistent with String and Values).
 // Ref: std json.Marshaler.
 func (s *Stack[T]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.values)
+	return json.Marshal(s.Values())
 }
 
 // UnmarshalJSON unmarshals a JSON description of stack.
 // The input can be assumed to be a valid encoding of a JSON value.
+// The input is expected to be in LIFO order (as produced by MarshalJSON).
 // UnmarshalJSON must copy the JSON data if it wishes to retain the data after returning.
 // Ref: std json.Unmarshaler.
 func (s *Stack[T]) UnmarshalJSON(data []byte) error {
 	var v []T
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
+	}
+	// v is in LIFO order (top first), revert it to get push order
+	values := make([]T, len(v))
+	for i, j := 0, len(v)-1; j >= 0; i, j = i+1, j-1 {
+		values[i] = v[j]
 	}
 	s.values = v
 	return nil

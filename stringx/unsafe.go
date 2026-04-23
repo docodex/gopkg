@@ -2,12 +2,12 @@ package stringx
 
 import "unsafe"
 
-// StringToBytes converts a string to a byte slice.
+// UnsafeStringToBytes converts a string to a byte slice.
 //
 // This is a shallow copy, means that the returned byte slice reuse
 // the underlying array in string, so you can't change the returned
 // byte slice in any situations.
-func StringToBytes(s string) []byte {
+func UnsafeStringToBytes(s string) []byte {
 	// unsafe.StringData is unspecified for the empty string, so we provide a strict interpretation
 	if len(s) == 0 {
 		return nil
@@ -17,7 +17,7 @@ func StringToBytes(s string) []byte {
 	return unsafe.Slice(unsafe.StringData(s), len(s))
 }
 
-// func StringToBytes(s string) []byte {
+// func UnsafeStringToBytes(s string) []byte {
 // 	if len(s) == 0 {
 // 		return nil
 // 	}
@@ -26,7 +26,7 @@ func StringToBytes(s string) []byte {
 // 	return *(*[]byte)(unsafe.Pointer(&h))
 // }
 
-// func StringToBytes(s string) (b []byte) {
+// func UnsafeStringToBytes(s string) (b []byte) {
 // 	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
 // 	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
 // 	bh.Data = sh.Data
@@ -35,12 +35,12 @@ func StringToBytes(s string) []byte {
 // 	return b
 // }
 
-// BytesToString converts a byte slice to a string.
+// UnsafeBytesToString converts a byte slice to a string.
 //
 // This is a shallow copy, means that the returned string reuse the
 // underlying array in byte slice, it's your responsibility to keep
 // the input byte slice survive until you don't access the string anymore.
-func BytesToString(b []byte) string {
+func UnsafeBytesToString(b []byte) string {
 	// unsafe.SliceData relies on cap whereas we want to rely on len
 	if len(b) == 0 {
 		return ""
@@ -50,7 +50,7 @@ func BytesToString(b []byte) string {
 	return unsafe.String(unsafe.SliceData(b), len(b))
 }
 
-// func BytesToString(b []byte) string {
+// func UnsafeBytesToString(b []byte) string {
 // 	if len(b) == 0 {
 // 		return ""
 // 	}

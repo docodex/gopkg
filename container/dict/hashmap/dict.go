@@ -6,8 +6,12 @@ import (
 	"maps"
 	"sync"
 
+	"github.com/docodex/gopkg/container/dict"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ dict.Map[int, int] = (*Map[int, int])(nil)
 
 const defaultCapacity = 32
 
@@ -35,11 +39,23 @@ func NewWithCapacity[K comparable, V any](capacity int) *Map[K, V] {
 	}
 }
 
-// WithLock adds sync.RWMutex to support concurrent use by multiple goroutines without additional
-// locking or coordination.
-func (m *Map[K, V]) WithLock() *Map[K, V] {
-	m.mu = &sync.RWMutex{}
-	return m
+// NewWithLock returns an initialized map with the default capacity as the initial capacity for
+// the backing hash table and a sync.RWMutex to support concurrent use by multiple goroutines.
+func NewWithLock[K comparable, V any]() *Map[K, V] {
+	return &Map[K, V]{
+		entries: make(map[K]V, defaultCapacity),
+		mu:      &sync.RWMutex{},
+	}
+}
+
+// NewWithCapacityAndLock returns an initialized map with the given capacity as the initial
+// capacity for the backing hash table and a sync.RWMutex to support concurrent use by multiple
+// goroutines.
+func NewWithCapacityAndLock[K comparable, V any](capacity int) *Map[K, V] {
+	return &Map[K, V]{
+		entries: make(map[K]V, max(capacity, defaultCapacity)),
+		mu:      &sync.RWMutex{},
+	}
 }
 
 // Len returns the number of entries of map m.
@@ -64,7 +80,7 @@ func (m *Map[K, V]) Values() []V {
 	return values
 }
 
-// Values returns all keys in map.
+// Keys returns all keys in map.
 func (m *Map[K, V]) Keys() []K {
 	if m.mu != nil {
 		m.mu.RLock()
@@ -160,7 +176,7 @@ func (m *Map[K, V]) Contains(k ...K) bool {
 	return true
 }
 
-// Contains returns true if map contains any of the given keys k.
+// ContainsAny returns true if map contains any of the given keys k.
 func (m *Map[K, V]) ContainsAny(k ...K) bool {
 	if m.mu != nil {
 		m.mu.RLock()

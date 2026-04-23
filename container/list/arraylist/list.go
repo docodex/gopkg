@@ -19,8 +19,12 @@ import (
 	"slices"
 
 	"github.com/docodex/gopkg/container"
+	"github.com/docodex/gopkg/container/list"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ list.List[int] = (*List[int])(nil)
 
 // List represents an array list which holds the elements in a slice.
 type List[T any] struct {
@@ -193,20 +197,25 @@ func (l *List[T]) delete(i int) {
 		}
 	}
 	// delete
+	var zero T
 	switch i {
 	case l.low:
+		l.values[l.low] = zero // avoid memory leak
 		l.low++
 	case l.high - 1:
 		l.high--
+		l.values[l.high] = zero // avoid memory leak
 	default:
 		// delete: move the smaller part
 		if l.high-i-1 > i-l.low {
 			low := l.low + 1
 			copy(l.values[low:i+1], l.values[l.low:i])
+			l.values[l.low] = zero // avoid memory leak
 			l.low = low
 		} else {
 			high := l.high - 1
 			copy(l.values[i:high], l.values[i+1:l.high])
+			l.values[high] = zero // avoid memory leak
 			l.high = high
 		}
 	}
@@ -282,13 +291,30 @@ func (l *List[T]) PushBack(v ...T) {
 	l.insert(l.high, v...)
 }
 
+// checkAndShrink checks and shrinks the underlying array if necessary.
+func (l *List[T]) checkAndShrink() {
+	if size := l.Len(); cap(l.values) > defaultCapacity && size > 0 && size<<2 <= cap(l.values) {
+		capacity := max(size<<1, defaultCapacity)
+		v := make([]T, capacity)
+		low := (capacity - size) >> 1
+		high := low + size
+		copy(v[low:high], l.values[l.low:l.high])
+		l.values = v
+		l.low = low
+		l.high = high
+	}
+}
+
 // PopFront removes the first value if exists in list and returns it.
 // The ok result indicates whether such value was removed from list.
 func (l *List[T]) PopFront() (value T, ok bool) {
 	if l.low < l.high {
 		value = l.values[l.low]
+		var zero T
+		l.values[l.low] = zero // avoid memory leak
 		l.low++
 		ok = true
+		l.checkAndShrink()
 	}
 	return
 }
@@ -299,7 +325,10 @@ func (l *List[T]) PopBack() (value T, ok bool) {
 	if l.low < l.high {
 		l.high--
 		value = l.values[l.high]
+		var zero T
+		l.values[l.high] = zero // avoid memory leak
 		ok = true
+		l.checkAndShrink()
 	}
 	return
 }

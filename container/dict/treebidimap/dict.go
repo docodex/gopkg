@@ -15,9 +15,13 @@ import (
 	"sync"
 
 	"github.com/docodex/gopkg/container"
+	"github.com/docodex/gopkg/container/dict"
 	"github.com/docodex/gopkg/container/tree/redblacktree"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ dict.BidiMap[int, int] = (*Map[int, int])(nil)
 
 // Map represents a bidirectional treemap which holds the entries in two red-black trees.
 type Map[K comparable, V comparable] struct {
@@ -26,7 +30,7 @@ type Map[K comparable, V comparable] struct {
 	mu      *sync.RWMutex            // for concurrent use
 }
 
-// New returns an initialized bidirectional map with [cmp.Compare] as the cmp function for the
+// New returns an initialized bidirectional map with [cmp.Compare] as the cmp functions for the
 // backing red-black trees.
 func New[K cmp.Ordered, V cmp.Ordered]() *Map[K, V] {
 	return &Map[K, V]{
@@ -38,7 +42,10 @@ func New[K cmp.Ordered, V cmp.Ordered]() *Map[K, V] {
 
 // NewFunc returns an initialized bidirectional map with the given functions cmp as the cmp
 // function for the backing red-black trees.
-func NewFunc[K comparable, V comparable](cmp1 container.Compare[K], cmp2 container.Compare[V]) *Map[K, V] {
+func NewFunc[K comparable, V comparable](
+	cmp1 container.Compare[K],
+	cmp2 container.Compare[V],
+) *Map[K, V] {
 	return &Map[K, V]{
 		forward: redblacktree.NewFunc[K, V](cmp1),
 		inverse: redblacktree.NewFunc[V, K](cmp2),
@@ -46,11 +53,29 @@ func NewFunc[K comparable, V comparable](cmp1 container.Compare[K], cmp2 contain
 	}
 }
 
-// WithLock adds sync.RWMutex to support concurrent use by multiple goroutines without additional
-// locking or coordination.
-func (m *Map[K, V]) WithLock() *Map[K, V] {
-	m.mu = &sync.RWMutex{}
-	return m
+// NewWithLock returns an initialized bidirectional map with [cmp.Compare] as the cmp functions
+// for the back backing red-black trees and a sync.RWMutex to support concurrent use by
+// multiple goroutines.
+func NewWithLock[K cmp.Ordered, V cmp.Ordered]() *Map[K, V] {
+	return &Map[K, V]{
+		forward: redblacktree.New[K, V](),
+		inverse: redblacktree.New[V, K](),
+		mu:      &sync.RWMutex{},
+	}
+}
+
+// NewFuncWithLock returns an initialized bidirectional map with the given functions (cmp1,
+// cmp2) as the cmp functions for the backing red-black trees and a sync.RWMutex to support
+// concurrent use by multiple goroutines.
+func NewFuncWithLock[K comparable, V comparable](
+	cmp1 container.Compare[K],
+	cmp2 container.Compare[V],
+) *Map[K, V] {
+	return &Map[K, V]{
+		forward: redblacktree.NewFunc[K, V](cmp1),
+		inverse: redblacktree.NewFunc[V, K](cmp2),
+		mu:      &sync.RWMutex{},
+	}
 }
 
 // Len returns the number of entries of map m.
@@ -76,7 +101,7 @@ func (m *Map[K, V]) Values() []V {
 	return values
 }
 
-// Values returns all keys in map.
+// Keys returns all keys in map.
 func (m *Map[K, V]) Keys() []K {
 	if m.mu != nil {
 		m.mu.RLock()
@@ -238,7 +263,7 @@ func (m *Map[K, V]) ContainsValues(v ...V) bool {
 	return true
 }
 
-// Contains returns true if map contains any of the given keys k.
+// ContainsAny returns true if map contains any of the given keys k.
 func (m *Map[K, V]) ContainsAny(k ...K) bool {
 	if m.mu != nil {
 		m.mu.RLock()

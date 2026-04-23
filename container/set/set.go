@@ -29,12 +29,16 @@ type Set[T any] interface {
 	Remove(v ...T)
 	// Contains returns true if set contains all of the given values v.
 	Contains(v ...T) bool
-	// Contains returns true if set contains any of the given values v.
+	// ContainsAny returns true if set contains any of the given values v.
 	ContainsAny(v ...T) bool
 	// Clear removes all values in set.
 	Clear()
 
 	// Range calls f for each value v present in the set.
+	//
+	// WARNING: Implementations that use locks (e.g. NewWithLock) hold a read lock
+	// during the callback. The callback MUST NOT call mutating methods (Add,
+	// Remove, Clear, etc.) on the same container, or it will deadlock.
 	Range(f func(v T))
 }
 
@@ -45,6 +49,7 @@ func Intersection[T comparable](dst Set[T], src ...Set[T]) {
 	if dst == nil {
 		return
 	}
+	dst.Clear()
 	var (
 		tmp = -1 // shortest set length
 		pos = -1 // shortest set index
@@ -79,6 +84,7 @@ func Union[T comparable](dst Set[T], src ...Set[T]) {
 	if dst == nil {
 		return
 	}
+	dst.Clear()
 	for i := range src {
 		if src[i] != nil {
 			src[i].Range(func(v T) {
@@ -93,6 +99,16 @@ func Union[T comparable](dst Set[T], src ...Set[T]) {
 // Ref: https://proofwiki.org/wiki/Definition:Set_Difference
 func Difference[T comparable](dst, a, b Set[T]) {
 	if dst == nil {
+		return
+	}
+	dst.Clear()
+	if a == nil {
+		return
+	}
+	if b == nil {
+		a.Range(func(v T) {
+			dst.Add(v)
+		})
 		return
 	}
 	a.Range(func(v T) {

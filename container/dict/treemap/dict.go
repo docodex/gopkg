@@ -6,9 +6,13 @@ import (
 	"sync"
 
 	"github.com/docodex/gopkg/container"
+	"github.com/docodex/gopkg/container/dict"
 	"github.com/docodex/gopkg/container/tree/redblacktree"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ dict.Map[int, int] = (*Map[int, int])(nil)
 
 // Map represents a treemap which holds the entries in a red-black tree.
 type Map[K comparable, V any] struct {
@@ -34,11 +38,23 @@ func NewFunc[K comparable, V any](cmp container.Compare[K]) *Map[K, V] {
 	}
 }
 
-// WithLock adds sync.RWMutex to support concurrent use by multiple goroutines without additional
-// locking or coordination.
-func (m *Map[K, V]) WithLock() *Map[K, V] {
-	m.mu = &sync.RWMutex{}
-	return m
+// NewWithLock returns an initialized map with [cmp.Compare] as the cmp function for the backing
+// red-black tree and a sync.RWMutex to support concurrent use by multiple goroutines.
+func NewWithLock[K cmp.Ordered, V any]() *Map[K, V] {
+	return &Map[K, V]{
+		entries: redblacktree.New[K, V](),
+		mu:      &sync.RWMutex{},
+	}
+}
+
+// NewFuncWithLock returns an initialized map with the given function cmp as the cmp function
+// for the backing red-black tree and a sync.RWMutex to support concurrent use by multiple
+// goroutines.
+func NewFuncWithLock[K comparable, V any](cmp container.Compare[K]) *Map[K, V] {
+	return &Map[K, V]{
+		entries: redblacktree.NewFunc[K, V](cmp),
+		mu:      &sync.RWMutex{},
+	}
 }
 
 // Len returns the number of entries of map m.
@@ -64,7 +80,7 @@ func (m *Map[K, V]) Values() []V {
 	return values
 }
 
-// Values returns all keys in map.
+// Keys returns all keys in map.
 func (m *Map[K, V]) Keys() []K {
 	if m.mu != nil {
 		m.mu.RLock()
@@ -160,7 +176,7 @@ func (m *Map[K, V]) Contains(k ...K) bool {
 	return true
 }
 
-// Contains returns true if map contains any of the given keys k.
+// ContainsAny returns true if map contains any of the given keys k.
 func (m *Map[K, V]) ContainsAny(k ...K) bool {
 	if m.mu != nil {
 		m.mu.RLock()

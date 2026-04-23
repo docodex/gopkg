@@ -58,6 +58,7 @@ func BeOptimistic() Option {
 // slice in order to use this field.
 func DoReplaceInPlace() Option {
 	return func(opts *sjson.Options) {
+		opts.Optimistic = true
 		opts.ReplaceInPlace = true
 	}
 }

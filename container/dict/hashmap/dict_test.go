@@ -35,7 +35,7 @@ func TestMapPut(t *testing.T) {
 	m.Put(4, "d")
 	m.Put(1, "x")
 	m.Put(2, "b")
-	m.Put(1, "a") //overwrite
+	m.Put(1, "a") // overwrite
 
 	if actualValue := m.Len(); actualValue != 7 {
 		t.Errorf("Got %v expected %v", actualValue, 7)
@@ -77,7 +77,7 @@ func TestMapRemove(t *testing.T) {
 	m.Put(4, "d")
 	m.Put(1, "x")
 	m.Put(2, "b")
-	m.Put(1, "a") //overwrite
+	m.Put(1, "a") // overwrite
 
 	m.Remove(5)
 	m.Remove(6)
@@ -216,7 +216,7 @@ func BenchmarkHashMapGet1000(b *testing.B) {
 	b.StopTimer()
 	size := 1000
 	m := hashmap.New[int, int]()
-	for n := 0; n < size; n++ {
+	for n := range size {
 		m.Put(n, n)
 	}
 	b.StartTimer()
@@ -238,7 +238,7 @@ func BenchmarkHashMapGet100000(b *testing.B) {
 	b.StopTimer()
 	size := 100000
 	m := hashmap.New[int, int]()
-	for n := 0; n < size; n++ {
+	for n := range size {
 		m.Put(n, n)
 	}
 	b.StartTimer()

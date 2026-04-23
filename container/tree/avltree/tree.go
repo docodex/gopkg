@@ -93,10 +93,7 @@ func New[K cmp.Ordered, V any]() *Tree[K, V] {
 // NewFunc returns an initialized tree with the given function cmp as the cmp function.
 func NewFunc[K comparable, V any](cmp container.Compare[K]) *Tree[K, V] {
 	if cmp == nil {
-		cmp = func(a, b K) int {
-			// just to cover nil cmp error
-			return 0
-		}
+		panic("avltree: comparator function must not be nil")
 	}
 	return &Tree[K, V]{
 		root: nil,
@@ -223,7 +220,7 @@ func (t *Tree[K, V]) Values() []V {
 	return values
 }
 
-// Values returns all keys in tree (in in-order traversal order).
+// Keys returns all keys in tree (in in-order traversal order).
 func (t *Tree[K, V]) Keys() []K {
 	keys, _ := t.InOrder()
 	return keys

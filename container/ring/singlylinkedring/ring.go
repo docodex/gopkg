@@ -1,7 +1,13 @@
 // Package singlylinkedring implements a singly linked circular list.
 package singlylinkedring
 
-import "github.com/docodex/gopkg/jsonx"
+import (
+	"github.com/docodex/gopkg/container/ring"
+	"github.com/docodex/gopkg/jsonx"
+)
+
+// compile-time interface check
+var _ ring.Ring[int] = (*Ring[int])(nil)
 
 // A Ring is an element of a singly-linked circular list, or ring.
 // Rings do not have a beginning or end; a pointer to any ring element
@@ -55,7 +61,7 @@ func (r *Ring[T]) Prev() *Ring[T] {
 // in the ring and returns that ring element. r must not be empty.
 func (r *Ring[T]) Move(n int) *Ring[T] {
 	size := r.Len()
-	if size > 2 {
+	if size > 1 {
 		for n < 0 {
 			n += size
 		}
@@ -72,8 +78,8 @@ func (r *Ring[T]) Move(n int) *Ring[T] {
 //
 // If r and s point to the same ring, linking
 // them removes the elements between r and s from the ring.
-// The removed elements form a subring and the result is a
-// reference to that subring (if no elements were removed,
+// The removed elements form a sub-ring and the result is a
+// reference to that sub-ring (if no elements were removed,
 // the result is still the original value for r.Next(),
 // and not nil).
 //
@@ -95,7 +101,7 @@ func (r *Ring[T]) Link(s *Ring[T]) *Ring[T] {
 
 // Unlink removes n % r.Len() elements from the ring r, starting
 // at r.Next(). If n % r.Len() == 0, r remains unchanged.
-// The result is the removed subring. r must not be empty.
+// The result is the removed sub-ring. r must not be empty.
 func (r *Ring[T]) Unlink(n int) *Ring[T] {
 	if n <= 0 {
 		return nil

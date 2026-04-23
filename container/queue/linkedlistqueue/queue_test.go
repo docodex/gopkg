@@ -98,7 +98,7 @@ func TestQueueSerialization(t *testing.T) {
 	err = q.UnmarshalJSON(bytes)
 	assert()
 
-	bytes, err = json.Marshal([]any{"a", "b", "c", q})
+	_, err = json.Marshal([]any{"a", "b", "c", q})
 	if err != nil {
 		t.Errorf("Got error %v", err)
 	}
@@ -133,7 +133,7 @@ func benchmarkDequeue(b *testing.B, q *linkedlistqueue.Queue[any], size int) {
 	}
 }
 
-func BenchmarkArrayQueueDequeue100(b *testing.B) {
+func BenchmarkLinkedListQueueDequeue100(b *testing.B) {
 	b.StopTimer()
 	size := 100
 	q := linkedlistqueue.New[any]()
@@ -144,7 +144,7 @@ func BenchmarkArrayQueueDequeue100(b *testing.B) {
 	benchmarkDequeue(b, q, size)
 }
 
-func BenchmarkArrayQueueDequeue1000(b *testing.B) {
+func BenchmarkLinkedListQueueDequeue1000(b *testing.B) {
 	b.StopTimer()
 	size := 1000
 	q := linkedlistqueue.New[any]()
@@ -155,7 +155,7 @@ func BenchmarkArrayQueueDequeue1000(b *testing.B) {
 	benchmarkDequeue(b, q, size)
 }
 
-func BenchmarkArrayQueueDequeue10000(b *testing.B) {
+func BenchmarkLinkedListQueueDequeue10000(b *testing.B) {
 	b.StopTimer()
 	size := 10000
 	q := linkedlistqueue.New[any]()
@@ -166,7 +166,7 @@ func BenchmarkArrayQueueDequeue10000(b *testing.B) {
 	benchmarkDequeue(b, q, size)
 }
 
-func BenchmarkArrayQueueDequeue100000(b *testing.B) {
+func BenchmarkLinkedListQueueDequeue100000(b *testing.B) {
 	b.StopTimer()
 	size := 100000
 	q := linkedlistqueue.New[any]()
@@ -177,7 +177,7 @@ func BenchmarkArrayQueueDequeue100000(b *testing.B) {
 	benchmarkDequeue(b, q, size)
 }
 
-func BenchmarkArrayQueueEnqueue100(b *testing.B) {
+func BenchmarkLinkedListQueueEnqueue100(b *testing.B) {
 	b.StopTimer()
 	size := 100
 	q := linkedlistqueue.New[any]()
@@ -185,7 +185,7 @@ func BenchmarkArrayQueueEnqueue100(b *testing.B) {
 	benchmarkEnqueue(b, q, size)
 }
 
-func BenchmarkArrayQueueEnqueue1000(b *testing.B) {
+func BenchmarkLinkedListQueueEnqueue1000(b *testing.B) {
 	b.StopTimer()
 	size := 1000
 	q := linkedlistqueue.New[any]()
@@ -193,7 +193,7 @@ func BenchmarkArrayQueueEnqueue1000(b *testing.B) {
 	benchmarkEnqueue(b, q, size)
 }
 
-func BenchmarkArrayQueueEnqueue10000(b *testing.B) {
+func BenchmarkLinkedListQueueEnqueue10000(b *testing.B) {
 	b.StopTimer()
 	size := 10000
 	q := linkedlistqueue.New[any]()
@@ -201,7 +201,7 @@ func BenchmarkArrayQueueEnqueue10000(b *testing.B) {
 	benchmarkEnqueue(b, q, size)
 }
 
-func BenchmarkArrayQueueEnqueue100000(b *testing.B) {
+func BenchmarkLinkedListQueueEnqueue100000(b *testing.B) {
 	b.StopTimer()
 	size := 100000
 	q := linkedlistqueue.New[any]()

@@ -131,10 +131,7 @@ func New[K cmp.Ordered, V any](order int) *Tree[K, V] {
 // NewFunc returns an initialized tree with the given function cmp as the cmp function.
 func NewFunc[K comparable, V any](order int, cmp container.Compare[K]) *Tree[K, V] {
 	if cmp == nil {
-		cmp = func(a, b K) int {
-			// just to cover nil cmp error
-			return 0
-		}
+		panic("btree: comparator function must not be nil")
 	}
 	m := max(order, 3) // order m must be greater than 2
 	return &Tree[K, V]{
@@ -214,7 +211,7 @@ func (t *Tree[K, V]) Values() []V {
 	return values
 }
 
-// Values returns all keys in tree (in in-order traversal order).
+// Keys returns all keys in tree (in in-order traversal order).
 func (t *Tree[K, V]) Keys() []K {
 	entries := t.InOrder()
 	keys := make([]K, 0, len(entries))
@@ -412,15 +409,15 @@ func (t *Tree[K, V]) Remove(k K) {
 }
 
 // remove removes an entry at index i from entries of the given node x, checks and does fixup for
-// the inbalance introduced by remove if necessary.
+// the in-balance introduced by remove if necessary.
 // The given node x must not be nil.
 func (t *Tree[K, V]) remove(x *Node[K, V], i int) {
 	// if x is an internal node (not leaf)
 	if len(x.children) != 0 {
 		// largest node in the left subtree must not be nil to satisfy the properties of B-tree
 		y := x.children[i].MaxNode() // y must be a leaf node
-		j := len(y.Entries) - 1      // lagest entry index in node y
-		// replace the entry to be removed in node x with the lagest entry in node y
+		j := len(y.Entries) - 1      // largest entry index in node y
+		// replace the entry to be removed in node x with the largest entry in node y
 		x.Entries[i] = y.Entries[j]
 		// transfer remove(x, i) to remove(y, j)
 		x = y
@@ -435,7 +432,7 @@ func (t *Tree[K, V]) remove(x *Node[K, V], i int) {
 	}
 }
 
-// removeFixup checks and does fixup for the inbalance introduced by remove if necessary.
+// removeFixup checks and does fixup for the in-balance introduced by remove if necessary.
 // The given node x is the node just removed entry, and the given key k is the key of entry just
 // removed from entries of node x.
 // At the same time, the given node x is a leaf node or its number of children already matches its
@@ -510,7 +507,7 @@ func (t *Tree[K, V]) removeFixup(x *Node[K, V], k K) {
 	}
 
 	// parent might underflow
-	// check and do fixup for the inbalance introduced by remove on parent if necessary
+	// check and do fixup for the in-balance introduced by remove on parent if necessary
 	t.removeFixup(x.parent, k)
 }
 

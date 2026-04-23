@@ -98,7 +98,7 @@ func TestStackSerialization(t *testing.T) {
 	err = s.UnmarshalJSON(bytes)
 	assert()
 
-	bytes, err = json.Marshal([]any{"a", "b", "c", s})
+	_, err = json.Marshal([]any{"a", "b", "c", s})
 	if err != nil {
 		t.Errorf("Got error %v", err)
 	}

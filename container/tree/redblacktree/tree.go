@@ -106,7 +106,7 @@ func (n *Node[K, V]) Max() *Node[K, V] {
 	return x
 }
 
-// Tree represents an red-black tree.
+// Tree represents a red-black tree.
 type Tree[K comparable, V any] struct {
 	root *Node[K, V]          // the root node of tree
 	len  int                  // current tree length which is the number of nodes of tree
@@ -123,10 +123,7 @@ func New[K cmp.Ordered, V any]() *Tree[K, V] {
 // NewFunc returns an initialized tree with the given function cmp as the cmp function.
 func NewFunc[K comparable, V any](cmp container.Compare[K]) *Tree[K, V] {
 	if cmp == nil {
-		cmp = func(a, b K) int {
-			// just to cover nil cmp error
-			return 0
-		}
+		panic("redblacktree: comparator function must not be nil")
 	}
 	return &Tree[K, V]{
 		root: nil,
@@ -219,7 +216,7 @@ func (t *Tree[K, V]) Values() []V {
 	return values
 }
 
-// Values returns all keys in tree (in in-order traversal order).
+// Keys returns all keys in tree (in in-order traversal order).
 func (t *Tree[K, V]) Keys() []K {
 	keys, _ := t.InOrder()
 	return keys
@@ -258,7 +255,7 @@ func (t *Tree[K, V]) write(buf *strings.Builder, x *Node[K, V], prefix string, t
 	if x.color == red {
 		color = "r"
 	}
-	fmt.Fprintf(buf, "%v:%v[%s]\n", x.key, x.Value, color)
+	_, _ = fmt.Fprintf(buf, "%v:%v[%s]\n", x.key, x.Value, color)
 	if x.left != nil {
 		newPrefix := prefix
 		if tail {
@@ -337,11 +334,11 @@ func (t *Tree[K, V]) Insert(k K, v V) {
 		t.len++
 		return
 	}
-	// check and do fixup for the inbalance introduced by insert if necessary
+	// check and do fixup for the in-balance introduced by insert if necessary
 	t.insertFixup(x)
 }
 
-// fixupInsert checks and does fixup for the inbalance introduced by insert if necessary.
+// fixupInsert checks and does fixup for the in-balance introduced by insert if necessary.
 // The given node x (just inserted) must not be nil, and the color of node x is red.
 func (t *Tree[K, V]) insertFixup(x *Node[K, V]) {
 	// as node x is red, the parent of node x should not be red
@@ -358,7 +355,7 @@ func (t *Tree[K, V]) insertFixup(x *Node[K, V]) {
 	t.root.color = black
 }
 
-// insertFixupLeft checks and does fixup for the inbalance introduced by insert if necessary.
+// insertFixupLeft checks and does fixup for the in-balance introduced by insert if necessary.
 // The given node x must not be nil, and the color of node x is red.
 // At the same time, both parent and grandparent of node x are not nil, and parent is the left
 // child of grandparent of node x.
@@ -387,7 +384,7 @@ func (t *Tree[K, V]) insertFixupLeft(x *Node[K, V]) *Node[K, V] {
 	return x
 }
 
-// insertFixupRight checks and does fixup for the inbalance introduced by insert if necessary.
+// insertFixupRight checks and does fixup for the in-balance introduced by insert if necessary.
 // The given node x must not be nil, and the color of node x is red.
 // At the same time, both parent and grandparent of node x are not nil, and parent is the right
 // child of grandparent of node x.
@@ -424,10 +421,10 @@ func (t *Tree[K, V]) Remove(k K) {
 	}
 }
 
-// remove removes the node x from tree, checks and does fixup for the inbalance introduced by
+// remove removes the node x from tree, checks and does fixup for the in-balance introduced by
 // remove if necessary.
 // The given node x must not be nil.
-// 1. x has tow children, replace the key and value of x with the key and value of its next node
+// 1. x has two children, replace the key and value of x with the key and value of its next node
 // x in in-order traversal order, then call remove(x)
 // 2. x has only one child: left or right, then the subtree (left or right) must have only one
 // node x (x.left or x.right), and x must be red for the balance of tree, replace the key and
@@ -472,7 +469,9 @@ func (t *Tree[K, V]) remove(x *Node[K, V]) {
 		return
 	}
 	// now, x.parent is not nil, then x must not be the root of tree, remove x
-	if x == x.parent.left {
+	// record which side x is on BEFORE detaching, so removeFixup knows the correct direction
+	isLeft := x == x.parent.left
+	if isLeft {
 		x.parent.left = nil
 	} else {
 		x.parent.right = nil
@@ -481,16 +480,18 @@ func (t *Tree[K, V]) remove(x *Node[K, V]) {
 	x.parent = nil
 	// now, x.parent has only one child: left or right
 	// if x (just removed) was black, removing it could break up the balance of tree
-	// check and do fixup for the inbalance introduced by remove if necessary
+	// check and do fixup for the in-balance introduced by remove if necessary
 	if x.color == black {
-		t.removeFixup(p)
+		t.removeFixup(p, isLeft)
 	}
 }
 
-// removeFixup checks and does fixup for the inbalance introduced by remove if necessary.
+// removeFixup checks and does fixup for the in-balance introduced by remove if necessary.
 // The given node p is the parent node of the node just removed, node p must not be nil, and has
 // only one child.
-func (t *Tree[K, V]) removeFixup(p *Node[K, V]) {
+// The isLeft parameter indicates whether the removed node was the left child of p on the first
+// iteration (when x is nil and direction cannot be determined from x == p.left).
+func (t *Tree[K, V]) removeFixup(p *Node[K, V], isLeft bool) {
 	// node x is defined as the node replacing the position of the node just removed
 	var x *Node[K, V]
 	for x != t.root && t.color(x) == black {
@@ -502,8 +503,9 @@ func (t *Tree[K, V]) removeFixup(p *Node[K, V]) {
 		// 4. sibling of x is not nil as x is dual-black (for balance)
 		if x != nil {
 			p = x.parent
+			isLeft = x == p.left
 		}
-		if x == p.left {
+		if isLeft {
 			x = t.removeFixupLeft(p)
 		} else {
 			x = t.removeFixupRight(p)
@@ -515,13 +517,13 @@ func (t *Tree[K, V]) removeFixup(p *Node[K, V]) {
 	}
 }
 
-// removeFixupLeft checks and does fixup for the inbalance introduced by remove if necessary.
+// removeFixupLeft checks and does fixup for the in-balance introduced by remove if necessary.
 // The given node p must not be nil, and has a left color child (could be nil) with dual-black.
 // So, the right child of node p is not nil (for balance).
 func (t *Tree[K, V]) removeFixupLeft(p *Node[K, V]) *Node[K, V] {
 	if p.right.color == red {
 		// if sibling is red, then parent p is black, and sibling must have two black children
-		// exchange the color of parent p and sibline, and do left lotate
+		// exchange the color of parent p and sibling, and do left rotate
 		p.color = red
 		p.right.color = black
 		t.leftRotate(p)
@@ -555,13 +557,13 @@ func (t *Tree[K, V]) removeFixupLeft(p *Node[K, V]) *Node[K, V] {
 	return t.root
 }
 
-// removeFixupRight checks and does fixup for the inbalance introduced by remove if necessary.
+// removeFixupRight checks and does fixup for the in-balance introduced by remove if necessary.
 // The given node p must not be nil, and has a right child (could be nil) with dual-black color.
 // So, the left child of node p is not nil (for balance).
 func (t *Tree[K, V]) removeFixupRight(p *Node[K, V]) *Node[K, V] {
 	if p.left.color == red {
 		// if sibling is red, then parent p is black, and sibling must have two black children
-		// exchange the color of parent p and sibline, and do right lotate
+		// exchange the color of parent p and sibling, and do right rotate
 		p.color = red
 		p.left.color = black
 		t.rightRotate(p)

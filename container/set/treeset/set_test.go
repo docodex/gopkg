@@ -16,6 +16,9 @@ func TestSet(t *testing.T) {
 	fmt.Println(slice == nil)
 	s := treeset.New[string]()
 	s.Add(slice...)
+	if actualValue := s.Len(); actualValue != 0 {
+		t.Errorf("Got %v expected %v", actualValue, 0)
+	}
 	fmt.Println("ok")
 	fmt.Println(s)
 
@@ -155,7 +158,7 @@ func TestSetSerialization(t *testing.T) {
 	err = s.UnmarshalJSON(bytes)
 	assert()
 
-	bytes, err = json.Marshal([]any{"a", "b", "c", s})
+	_, err = json.Marshal([]any{"a", "b", "c", s})
 	if err != nil {
 		t.Errorf("Got error %v", err)
 	}
@@ -248,9 +251,9 @@ func TestSetDifference(t *testing.T) {
 }
 
 func TestSet_WithLock(t *testing.T) {
-	s := treeset.New(1, 2, 3, 4, 5).WithLock()
+	s := treeset.NewWithLock(1, 2, 3, 4, 5)
 	if actualValue := s.Len(); actualValue != 5 {
-		t.Errorf("Got %v expected %v", actualValue, 2)
+		t.Errorf("Got %v expected %v", actualValue, 5)
 	}
 	if actualValue := s.Contains(1); actualValue != true {
 		t.Errorf("Got %v expected %v", actualValue, true)
@@ -259,12 +262,12 @@ func TestSet_WithLock(t *testing.T) {
 		t.Errorf("Got %v expected %v", actualValue, true)
 	}
 	if actualValue := s.Contains(6); actualValue != false {
-		t.Errorf("Got %v expected %v", actualValue, true)
+		t.Errorf("Got %v expected %v", actualValue, false)
 	}
 }
 
 func TestSet_WithLock_Add(t *testing.T) {
-	s := treeset.New[int]().WithLock()
+	s := treeset.NewWithLock[int]()
 	s.Add()
 	s.Add(1)
 	s.Add(2)
@@ -279,7 +282,7 @@ func TestSet_WithLock_Add(t *testing.T) {
 }
 
 func TestSet_WithLock_Contains(t *testing.T) {
-	s := treeset.New[int]().WithLock()
+	s := treeset.NewWithLock[int]()
 	s.Add(3, 1, 2)
 	s.Add(2, 3)
 	s.Add()
@@ -298,7 +301,7 @@ func TestSet_WithLock_Contains(t *testing.T) {
 }
 
 func TestSet_WithLock_Remove(t *testing.T) {
-	s := treeset.New[int]().WithLock()
+	s := treeset.NewWithLock[int]()
 	s.Add(3, 1, 2)
 	s.Remove()
 	if actualValue := s.Len(); actualValue != 3 {
@@ -318,7 +321,7 @@ func TestSet_WithLock_Remove(t *testing.T) {
 }
 
 func TestSet_WithLock_String(t *testing.T) {
-	s := treeset.New[int]().WithLock()
+	s := treeset.NewWithLock[int]()
 	s.Add(1)
 	if !strings.HasPrefix(s.String(), "TreeSet") {
 		t.Errorf("String should start with container name")

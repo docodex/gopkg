@@ -4,8 +4,12 @@ package linkedlistqueue
 import (
 	"encoding/json"
 
+	"github.com/docodex/gopkg/container/queue"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ queue.Queue[int] = (*Queue[int])(nil)
 
 // node is a node of a linked-list queue.
 type node[T any] struct {

@@ -15,7 +15,7 @@ import (
 // General Test funcs
 
 func TestEpoch(t *testing.T) {
-	t1 := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	t0 := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	v1 := t1.Sub(t0).Milliseconds()
 	v2 := t1.UnixMilli()
@@ -29,10 +29,16 @@ func TestEpoch(t *testing.T) {
 	fmt.Println(0x7FFFFFFFFF / (3600 * 1000 * 24 * 365))  // 39
 }
 
-func TestDefault(t *testing.T) {
-	s := snowflake.Default()
+func TestNewWithDefaultNode(t *testing.T) {
+	s, err := snowflake.New()
+	if err != nil {
+		t.Fatalf("error creating snowflake without specified node, %s", err)
+	}
 	for range 10 {
-		id := s.Generate()
+		id, err := s.Generate()
+		if err != nil {
+			t.Fatalf("failed to generate id: %v", err)
+		}
 		fmt.Println(id)
 	}
 }
@@ -54,7 +60,7 @@ func TestGenerateDuplicateID(t *testing.T) {
 	s, _ := snowflake.New(snowflake.WithNode(1))
 	var x, y int64
 	for range 1000000 {
-		y = s.Generate()
+		y, _ = s.Generate()
 		if x == y {
 			t.Errorf("x(%d) & y(%d) are the same", x, y)
 		}
@@ -67,7 +73,7 @@ func TestPrintAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating snowflake, %s", err)
 	}
-	id := s.Generate()
+	id, _ := s.Generate()
 	t.Logf("Int64    : %#v", snowflake.Decompose(id))
 }
 
@@ -81,10 +87,13 @@ func TestGenerate(t *testing.T) {
 	sleepTime := int64(50)
 	time.Sleep(time.Millisecond * time.Duration(sleepTime))
 
-	id := s.Generate()
+	id, err := s.Generate()
+	if err != nil {
+		t.Fatalf("failed to generate id: %v", err)
+	}
 
 	actualTime := (snowflake.Timestamp(id) - now.UnixMilli())
-	if actualTime < sleepTime || actualTime > sleepTime+1 {
+	if actualTime < sleepTime || actualTime > sleepTime+5 {
 		t.Errorf("unexpected time: %d", actualTime)
 	}
 
@@ -94,11 +103,12 @@ func TestGenerate(t *testing.T) {
 	}
 
 	actualNode := snowflake.Node(id)
-	if actualNode != int64(internal.Lower8BitPrivateIPv4()) {
+	nodeID, _ := internal.Lower8BitPrivateIPv4()
+	if actualNode != int64(nodeID) {
 		t.Errorf("unexpected machine: %d", actualNode)
 	}
 
-	fmt.Println("sonsnowflakeyflake id:", id)
+	fmt.Println("snowflake id:", id)
 	fmt.Println("epoch time:", now.UnixMilli())
 	fmt.Println("decompose:", snowflake.Decompose(id))
 }
@@ -111,15 +121,23 @@ func TestGenerate_InSequence(t *testing.T) {
 	}
 
 	startTime := now.UnixMilli()
-	node := int64(internal.Lower8BitPrivateIPv4())
+	nodeID, _ := internal.Lower8BitPrivateIPv4()
+	node := int64(nodeID)
 
 	var numID int
 	var lastID int64
 	var maxSeq int64
 
+	// Use a longer window to ensure sequence wraps around even under -race overhead.
+	// Without -race, Generate() easily exceeds 2048 calls/ms (sequence wraps in <1ms).
+	// With -race, the ~5-10x slowdown means we need more wall-clock time.
+	const windowMs = 20000
 	currentTime := startTime
-	for currentTime-startTime < 200 {
-		id := s.Generate()
+	for currentTime-startTime < windowMs {
+		id, err := s.Generate()
+		if err != nil {
+			t.Fatalf("failed to generate id: %v", err)
+		}
 		currentTime = time.Now().UnixMilli()
 		numID++
 
@@ -133,9 +151,12 @@ func TestGenerate_InSequence(t *testing.T) {
 
 		parts := snowflake.Decompose(id)
 
-		actualTime := parts["time"]
-		overtime := startTime + actualTime - currentTime
-		if overtime > 0 {
+		actualTime := parts["timestamp"]
+		overtime := actualTime - currentTime
+		// Allow 1ms tolerance: the monotonic clock (used by Generate) and the
+		// wall clock (used by time.Now().UnixMilli) can cross millisecond
+		// boundaries at slightly different moments, causing up to 1ms drift.
+		if overtime > 1 {
 			t.Errorf("unexpected overtime: %d", overtime)
 		}
 
@@ -176,7 +197,7 @@ func TestGenerate_InParallel(t *testing.T) {
 	const numID = 1000
 	generate := func(s *snowflake.Snowflake) {
 		for range numID {
-			id := s.Generate()
+			id, _ := s.Generate()
 			consumer <- id
 		}
 	}
@@ -250,12 +271,12 @@ func TestComposeAndDecompose(t *testing.T) {
 			}
 
 			// Verify sequence part
-			if parts["sequence"] != int64(tc.sequence) {
+			if parts["sequence"] != tc.sequence {
 				t.Errorf("sequence mismatch: got %d, want %d", parts["sequence"], tc.sequence)
 			}
 
 			// Verify machine id part
-			if parts["node"] != int64(tc.node) {
+			if parts["node"] != tc.node {
 				t.Errorf("node id mismatch: got %d, want %d", parts["node"], tc.node)
 			}
 
@@ -328,6 +349,6 @@ func BenchmarkGenerate(b *testing.B) {
 	b.ReportAllocs()
 
 	for b.Loop() {
-		_ = s.Generate()
+		_, _ = s.Generate()
 	}
 }

@@ -125,15 +125,9 @@ func Contains[T comparable](l List[T], v ...T) bool {
 	return true
 }
 
-// Contains returns true if list l contains any of the given values v.
+// ContainsAny returns true if list l contains any of the given values v.
 func ContainsAny[T comparable](l List[T], v ...T) bool {
-	if l == nil {
-		return false
-	}
-	if len(v) == 0 {
-		return true
-	}
-	if l.Len() == 0 {
+	if l == nil || len(v) == 0 || l.Len() == 0 {
 		return false
 	}
 	found := false

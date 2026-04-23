@@ -6,8 +6,12 @@ package deque
 import (
 	"encoding/json"
 
+	"github.com/docodex/gopkg/container/queue"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ queue.Queue[int] = (*Queue[int])(nil)
 
 // Queue represents a double ended queue which holds the elements in a slice.
 type Queue[T any] struct {
@@ -69,9 +73,12 @@ func (q *Queue[T]) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
-	q.values = v
-	q.first = 0
-	q.tail = len(v)
+	size := len(v)
+	capacity := max(size<<1, defaultCapacity)
+	q.values = make([]T, capacity)
+	q.first = (capacity - size) >> 1
+	q.tail = q.first + size
+	copy(q.values[q.first:q.tail], v)
 	return nil
 }
 
@@ -179,6 +186,8 @@ func (q *Queue[T]) checkAndShrink() {
 func (q *Queue[T]) DequeueFront() (value T, ok bool) {
 	if q.first < q.tail {
 		value = q.values[q.first]
+		var zero T
+		q.values[q.first] = zero // avoid memory leak
 		ok = true
 		q.first++
 		q.checkAndShrink()
@@ -192,6 +201,8 @@ func (q *Queue[T]) DequeueBack() (value T, ok bool) {
 	if q.first < q.tail {
 		q.tail--
 		value = q.values[q.tail]
+		var zero T
+		q.values[q.tail] = zero // avoid memory leak
 		ok = true
 		q.checkAndShrink()
 	}
@@ -216,6 +227,20 @@ func (q *Queue[T]) PeekBack() (value T, ok bool) {
 		ok = true
 	}
 	return
+}
+
+// Dequeue removes the first element if exists in queue and returns it.
+// Dequeue is an alias for [Queue.DequeueFront].
+// The ok result indicates whether such element was removed from queue.
+func (q *Queue[T]) Dequeue() (value T, ok bool) {
+	return q.DequeueFront()
+}
+
+// Peek returns the first element if exists in queue without removing it.
+// Peek is an alias for [Queue.PeekFront].
+// The ok result indicates whether such element was found in queue.
+func (q *Queue[T]) Peek() (value T, ok bool) {
+	return q.PeekFront()
 }
 
 // Clear removes all elements in queue.

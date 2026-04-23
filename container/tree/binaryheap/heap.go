@@ -20,7 +20,7 @@ import (
 	"github.com/docodex/gopkg/jsonx"
 )
 
-// Heap represents an binary heap which holds the elements in a slice.
+// Heap represents a binary heap which holds the elements in a slice.
 type Heap[T any] struct {
 	values []T               // current heap elements
 	less   container.Less[T] // function to compare heap elements
@@ -38,10 +38,7 @@ func New[T cmp.Ordered](v ...T) *Heap[T] {
 // given values v added.
 func NewFunc[T any](less container.Less[T], v ...T) *Heap[T] {
 	if less == nil {
-		less = func(a, b T) bool {
-			// just to cover nil less error
-			return false
-		}
+		panic("binaryheap: less function must not be nil")
 	}
 	h := &Heap[T]{
 		values: v,

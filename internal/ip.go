@@ -2,6 +2,7 @@ package internal
 
 import (
 	"errors"
+	"fmt"
 	"net"
 )
 
@@ -36,18 +37,24 @@ func isPrivateIPv4(ip net.IP) bool {
 			(ip[0] == 169 && ip[1] == 254)) // 169.254.0.0/16
 }
 
-func Lower8BitPrivateIPv4() uint8 {
+func Lower8BitPrivateIPv4() (uint8, error) {
 	ip, err := PrivateIPv4()
-	if err != nil || len(ip) != 4 {
-		return 0
+	if err != nil {
+		return 0, err
 	}
-	return uint8(ip[3])
+	if len(ip) != 4 {
+		return 0, fmt.Errorf("invalid IPv4: %v", ip)
+	}
+	return uint8(ip[3]), nil
 }
 
-func Lower16BitPrivateIPv4() uint16 {
+func Lower16BitPrivateIPv4() (uint16, error) {
 	ip, err := PrivateIPv4()
-	if err != nil || len(ip) != 4 {
-		return 0
+	if err != nil {
+		return 0, err
 	}
-	return uint16(ip[2])<<8 + uint16(ip[3])
+	if len(ip) != 4 {
+		return 0, fmt.Errorf("invalid IPv4: %v", ip)
+	}
+	return uint16(ip[2])<<8 + uint16(ip[3]), nil
 }

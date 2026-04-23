@@ -486,7 +486,7 @@ func TestListSerialization(t *testing.T) {
 	err = l.UnmarshalJSON(bytes)
 	assert()
 
-	bytes, err = json.Marshal([]any{"a", "b", "c", l})
+	_, err = json.Marshal([]any{"a", "b", "c", l})
 	if err != nil {
 		t.Errorf("Got error %v", err)
 	}
@@ -572,7 +572,7 @@ func (l *SimpleList[T]) PushFront(v ...T) {
 }
 
 func (l *SimpleList[T]) Get(i int) (value T, ok bool) {
-	if i >= 0 || i < l.len {
+	if i >= 0 && i < l.len {
 		value = l.values[i]
 		ok = true
 	}
@@ -580,7 +580,7 @@ func (l *SimpleList[T]) Get(i int) (value T, ok bool) {
 }
 
 func (l *SimpleList[T]) Set(i int, v T) {
-	if i >= 0 || i < l.len {
+	if i >= 0 && i < l.len {
 		l.values[i] = v
 	}
 }

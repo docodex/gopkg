@@ -5,8 +5,12 @@ import (
 	"encoding/json"
 	"sync"
 
+	"github.com/docodex/gopkg/container/set"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ set.Set[int] = (*Set[int])(nil)
 
 const defaultCapacity = 32
 
@@ -38,11 +42,27 @@ func NewWithCapacity[T comparable](capacity int) *Set[T] {
 	}
 }
 
-// WithLock adds sync.RWMutex to support concurrent use by multiple goroutines without additional
-// locking or coordination.
-func (s *Set[T]) WithLock() *Set[T] {
-	s.mu = &sync.RWMutex{}
+// NewWithLock returns an initialized set with the default capacity as the initial capacity for
+// the backing hash table and a sync.RWMutex to support concurrent use by multiple goroutines.
+func NewWithLock[T comparable](v ...T) *Set[T] {
+	s := &Set[T]{
+		values: make(map[T]struct{}, max(len(v), defaultCapacity)),
+		mu:     &sync.RWMutex{},
+	}
+	for i := range v {
+		s.values[v[i]] = struct{}{}
+	}
 	return s
+}
+
+// NewWithCapacityAndLock returns an initialized set with the given capacity as the initial
+// capacity for the backing hash table and a sync.RWMutex to support concurrent use by multiple
+// goroutines.
+func NewWithCapacityAndLock[T comparable](capacity int) *Set[T] {
+	return &Set[T]{
+		values: make(map[T]struct{}, max(capacity, defaultCapacity)),
+		mu:     &sync.RWMutex{},
+	}
 }
 
 // Len returns the number of values of set s.
@@ -137,7 +157,7 @@ func (s *Set[T]) Contains(v ...T) bool {
 	return true
 }
 
-// Contains returns true if set contains any of the given values v.
+// ContainsAny returns true if set contains any of the given values v.
 func (s *Set[T]) ContainsAny(v ...T) bool {
 	if s.mu != nil {
 		s.mu.RLock()

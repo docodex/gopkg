@@ -10,8 +10,12 @@ package circularqueue
 import (
 	"encoding/json"
 
+	"github.com/docodex/gopkg/container/queue"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ queue.Queue[int] = (*Queue[int])(nil)
 
 // Queue represents a circular queue which holds the elements in a slice.
 type Queue[T any] struct {
@@ -96,7 +100,7 @@ func (q *Queue[T]) UnmarshalJSON(data []byte) error {
 	q.init(max(q.cap, len(v)))
 	copy(q.values, v)
 	q.first = 0
-	q.tail = len(v)
+	q.tail = len(v) % q.cap
 	q.len = len(v)
 	return nil
 }
@@ -120,6 +124,8 @@ func (q *Queue[T]) Dequeue() (value T, ok bool) {
 		return
 	}
 	value = q.values[q.first]
+	var zero T
+	q.values[q.first] = zero // avoid memory leak
 	ok = true
 	q.first = (q.first + 1) % q.cap
 	q.len--

@@ -18,8 +18,12 @@ import (
 	"encoding/json"
 
 	"github.com/docodex/gopkg/container"
+	"github.com/docodex/gopkg/container/queue"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ queue.Queue[int] = (*Queue[int])(nil)
 
 // Element is an element of a priority queue.
 type Element[T any] struct {
@@ -32,7 +36,7 @@ func (e *Element[T]) Index() int {
 	return e.index
 }
 
-// Queue represents an priority queue which holds the elements in a slice.
+// Queue represents a priority queue which holds the elements in a slice.
 type Queue[T any] struct {
 	elements []*Element[T]     // current queue elements
 	less     container.Less[T] // function to compare queue elements
@@ -254,6 +258,7 @@ func (q *Queue[T]) Dequeue() (value T, ok bool) {
 		q.swap(0, n)
 		value = q.elements[n].Value
 		ok = true
+		q.elements[n].index = -1
 		q.elements = q.elements[:n]
 		q.shiftDown(0)
 		q.checkAndShrink()
@@ -293,6 +298,7 @@ func (q *Queue[T]) Remove(i int) (value T, ok bool) {
 	}
 	value = q.elements[n].Value
 	ok = true
+	q.elements[n].index = -1
 	q.elements = q.elements[:n]
 	if i != n && !q.shiftDown(i) {
 		q.shiftUp(i)

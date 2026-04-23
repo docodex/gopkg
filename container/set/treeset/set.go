@@ -7,11 +7,15 @@ import (
 	"sync"
 
 	"github.com/docodex/gopkg/container"
+	"github.com/docodex/gopkg/container/set"
 	"github.com/docodex/gopkg/container/tree/redblacktree"
 	"github.com/docodex/gopkg/jsonx"
 )
 
-// Map represents a treeset which holds the values in a red-black tree.
+// compile-time interface check
+var _ set.Set[int] = (*Set[int])(nil)
+
+// Set represents a treeset which holds the values in a red-black tree.
 type Set[T comparable] struct {
 	values *redblacktree.Tree[T, struct{}] // current set values
 	mu     *sync.RWMutex                   // for concurrent use
@@ -40,10 +44,26 @@ func NewFunc[T comparable](cmp container.Compare[T]) *Set[T] {
 	return s
 }
 
-// WithLock adds sync.RWMutex to support concurrent use by multiple goroutines without additional
-// locking or coordination.
-func (s *Set[T]) WithLock() *Set[T] {
-	s.mu = &sync.RWMutex{}
+// New returns an initialized set with [cmp.Compare] as the cmp function for the backing red-black
+// tree and a sync.RWMutex to support concurrent use by multiple goroutines.
+func NewWithLock[T cmp.Ordered](v ...T) *Set[T] {
+	s := &Set[T]{
+		values: redblacktree.New[T, struct{}](),
+		mu:     &sync.RWMutex{},
+	}
+	for i := range v {
+		s.values.Insert(v[i], struct{}{})
+	}
+	return s
+}
+
+// NewFunc returns an initialized set with the given function cmp as the cmp function for the
+// backing red-black tree and a sync.RWMutex to support concurrent use by multiple goroutines.
+func NewFuncWithLock[T comparable](cmp container.Compare[T]) *Set[T] {
+	s := &Set[T]{
+		values: redblacktree.NewFunc[T, struct{}](cmp),
+		mu:     &sync.RWMutex{},
+	}
 	return s
 }
 
@@ -139,7 +159,7 @@ func (s *Set[T]) Contains(v ...T) bool {
 	return true
 }
 
-// Contains returns true if set contains any of the given values v.
+// ContainsAny returns true if set contains any of the given values v.
 func (s *Set[T]) ContainsAny(v ...T) bool {
 	if s.mu != nil {
 		s.mu.RLock()

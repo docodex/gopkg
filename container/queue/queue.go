@@ -29,6 +29,13 @@ type Queue[T any] interface {
 	// Ref: std json.Unmarshaler.
 	UnmarshalJSON(data []byte) error
 
+	// Dequeue removes the first element if exists in queue and returns it.
+	// The ok result indicates whether such element was removed from queue.
+	Dequeue() (value T, ok bool)
+	// Peek returns the first element if exists in queue without removing it.
+	// The ok result indicates whether such element was found in queue.
+	Peek() (value T, ok bool)
+
 	// Clear removes all elements in queue.
 	Clear()
 }

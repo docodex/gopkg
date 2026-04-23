@@ -1,7 +1,13 @@
 // Package doublylinkedring implements a doubly linked circular list.
 package doublylinkedring
 
-import "github.com/docodex/gopkg/jsonx"
+import (
+	"github.com/docodex/gopkg/container/ring"
+	"github.com/docodex/gopkg/jsonx"
+)
+
+// compile-time interface check
+var _ ring.Ring[int] = (*Ring[int])(nil)
 
 // A Ring is an element of a doubly-linked circular list, or ring.
 // Rings do not have a beginning or end; a pointer to any ring element

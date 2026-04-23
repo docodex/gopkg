@@ -51,10 +51,10 @@ func TestPush(t *testing.T) {
 func TestRemove(t *testing.T) {
 	l := singlylinkedlist.New(1, 2, 3, 4, 5)
 	fmt.Println(l.Values())
-	v, ok := l.RemoveAfter(l.BackNode())
+	_, ok := l.RemoveAfter(l.BackNode())
 	assert.False(t, ok)
 	fmt.Println(l.Values())
-	v, ok = l.RemoveAfter(l.FrontNode())
+	v, ok := l.RemoveAfter(l.FrontNode())
 	assert.True(t, ok)
 	assert.Equal(t, v, 2)
 	fmt.Println(l.Values())
@@ -493,7 +493,7 @@ func TestListSerialization(t *testing.T) {
 	err = l.UnmarshalJSON(bytes)
 	assert()
 
-	bytes, err = json.Marshal([]any{"a", "b", "c", l})
+	_, err = json.Marshal([]any{"a", "b", "c", l})
 	if err != nil {
 		t.Errorf("Got error %v", err)
 	}

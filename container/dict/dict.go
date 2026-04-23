@@ -1,4 +1,4 @@
-// Package set provides an abstract Map interface.
+// Package dict provides an abstract Map interface.
 package dict
 
 import "github.com/docodex/gopkg/container"
@@ -28,12 +28,16 @@ type Map[K comparable, V any] interface {
 	Remove(k K)
 	// Contains returns true if map contains all of the given keys k.
 	Contains(k ...K) bool
-	// Contains returns true if map contains any of the given keys k.
+	// ContainsAny returns true if map contains any of the given keys k.
 	ContainsAny(k ...K) bool
 	// Clear removes all key-value pairs in map.
 	Clear()
 
 	// Range calls f for each key-value pair present in map.
+	//
+	// WARNING: Implementations that use locks (e.g. NewWithLock) hold a read lock
+	// during the callback. The callback MUST NOT call mutating methods (Put,
+	// Remove, Clear, etc.) on the same container, or it will deadlock.
 	Range(f func(k K, v V))
 }
 

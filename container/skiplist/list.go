@@ -118,10 +118,7 @@ func (l *Skiplist[K, V]) init(cmp container.Compare[K]) *Skiplist[K, V] {
 	l.len = 0
 	l.level = 1
 	if cmp == nil {
-		cmp = func(a, b K) int {
-			// just to cover nil cmp error
-			return 0
-		}
+		panic("skiplist: comparator function must not be nil")
 	}
 	l.cmp = cmp
 	return l
@@ -143,7 +140,7 @@ func (l *Skiplist[K, V]) Values() []V {
 	return values
 }
 
-// Values returns all keys in skiplist.
+// Keys returns all keys in skiplist.
 func (l *Skiplist[K, V]) Keys() []K {
 	keys := make([]K, 0, l.len)
 	l.Range(func(k K, v V) bool {
@@ -438,7 +435,7 @@ func (l *Skiplist[K, V]) GetRange(k1, k2 K) []*Element[K, V] {
 	return elements
 }
 
-// GetRangeByRank removes the nodes which rank is within the given range [rank1, rank2) which
+// GetRangeByRank returns the elements which rank is within the given range [rank1, rank2) which
 // rank1 is inclusive and rank2 is exclusive.
 func (l *Skiplist[K, V]) GetRangeByRank(rank1, rank2 int) []*Element[K, V] {
 	rank := 0

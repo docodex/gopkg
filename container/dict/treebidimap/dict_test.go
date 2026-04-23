@@ -20,7 +20,7 @@ func TestMapPut(t *testing.T) {
 	m.Put(4, "d")
 	m.Put(1, "x")
 	m.Put(2, "b")
-	m.Put(1, "a") //overwrite
+	m.Put(1, "a") // overwrite
 
 	if actualValue := m.Len(); actualValue != 7 {
 		t.Errorf("Got %v expected %v", actualValue, 7)
@@ -63,7 +63,7 @@ func TestMapRemove(t *testing.T) {
 	m.Put(4, "d")
 	m.Put(1, "x")
 	m.Put(2, "b")
-	m.Put(1, "a") //overwrite
+	m.Put(1, "a") // overwrite
 
 	m.Remove(5)
 	m.Remove(6)
@@ -123,7 +123,7 @@ func TestMapGetKey(t *testing.T) {
 	m.Put(4, "d")
 	m.Put(1, "x")
 	m.Put(2, "b")
-	m.Put(1, "a") //overwrite
+	m.Put(1, "a") // overwrite
 
 	// key,expectedValue,expectedFound
 	tests1 := [][]any{
@@ -182,7 +182,7 @@ func TestMapSerialization(t *testing.T) {
 	assert()
 	fmt.Println(m)
 
-	bytes, err = json.Marshal([]any{"a", "b", "c", m})
+	_, err = json.Marshal([]any{"a", "b", "c", m})
 	if err != nil {
 		t.Errorf("Got error %v", err)
 	}

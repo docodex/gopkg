@@ -19,8 +19,12 @@ import (
 	"slices"
 
 	"github.com/docodex/gopkg/container"
+	"github.com/docodex/gopkg/container/list"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ list.List[int] = (*List[int])(nil)
 
 // Node is a node of a linked list.
 type Node[T any] struct {

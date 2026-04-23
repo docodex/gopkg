@@ -4,8 +4,12 @@ package arrayqueue
 import (
 	"encoding/json"
 
+	"github.com/docodex/gopkg/container/queue"
 	"github.com/docodex/gopkg/jsonx"
 )
+
+// compile-time interface check
+var _ queue.Queue[int] = (*Queue[int])(nil)
 
 // Queue represents an array queue which holds the elements in a slice.
 type Queue[T any] struct {
@@ -120,6 +124,8 @@ func (q *Queue[T]) Enqueue(v T) {
 func (q *Queue[T]) Dequeue() (value T, ok bool) {
 	if q.first < q.tail {
 		value = q.values[q.first]
+		var zero T
+		q.values[q.first] = zero // avoid memory leak
 		ok = true
 		q.first++
 		q.checkAndShrink()
