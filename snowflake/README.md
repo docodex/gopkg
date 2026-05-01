@@ -47,15 +47,15 @@ Using the default settings, this allows for 2048 unique IDs to be generated ever
 
 ## Usage
 
-Import the package into your project then construct a new snowflake Node using a
-unique node id. The default settings permit a node id range from 0 to 1023.
-If you have set a custom NodeBits value, you will need to calculate what your
-node id range will be. With the node object call the `Generate()` method to
-generate and return a unique snowflake ID.
+Import the package into your project then construct a new `Snowflake` instance with
+a unique node id. The default settings permit a node id range from 0 to 1023. If you
+have set a custom `nodeBits` value, you will need to calculate what your node id
+range will be. Call the `Generate()` method on the instance to generate and return a
+unique snowflake ID.
 
-Keep in mind that each node you create must have a unique node id, even
-across multiple servers.  If you do not keep node ids unique the generator
-cannot guarantee unique IDs across all nodes.
+Keep in mind that every `Snowflake` instance - including instances running on
+different servers - must be configured with a unique node id. If two instances share
+the same node id the generator cannot guarantee unique IDs across them.
 
 **Example Program:**
 

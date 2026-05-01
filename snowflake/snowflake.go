@@ -74,13 +74,13 @@ var (
 // - 10 bits for a node id
 // - 11 bits for a sequence number
 //
-// Node represents the unique ID of a snowflake instance.
-// The default node is set to the lower 8 bits of the private IP address.
-// You may customize this to set a different value for your application.
+// The node id identifies this Snowflake instance within the fleet. It defaults
+// to the lower 8 bits of the private IPv4 address; you may set a different
+// value via [WithNode].
 //
-// CheckNode validates the uniqueness of a node id.
-// If checkNode returns false, the instance will not be created.
-// If checkNode is nil, no validation is done.
+// The check-node callback validates the configured node id. When supplied via
+// [WithCheckNode] and returning false, [New] fails with [ErrCheckNodeFailed].
+// If nil, no validation is performed.
 type Snowflake struct {
 	mu sync.Mutex
 
