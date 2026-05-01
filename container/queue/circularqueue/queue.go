@@ -1,0 +1,174 @@
+// Package circularqueue implements a circular buffer.
+//
+// In computer science, a circular buffer, circular queue, cyclic buffer or ring buffer
+// is a data structure that uses a single, fixed-size buffer as if it were connected
+// end-to-end. This structure lends itself easily to buffering data streams.
+//
+// Reference: https://en.wikipedia.org/wiki/Circular_buffer
+package circularqueue
+
+import (
+	"encoding/json"
+	"errors"
+
+	"github.com/docodex/gopkg/container/queue"
+	"github.com/docodex/gopkg/jsonx"
+)
+
+// compile-time interface check
+var _ queue.Queue[int] = (*Queue[int])(nil)
+
+// Queue represents a circular queue which holds the elements in a slice.
+type Queue[T any] struct {
+	values []T // current queue elements
+	first  int // first element index
+	tail   int // next of last element index
+	len    int // current queue length
+	cap    int // current queue capacity, cannot be changed after init
+}
+
+// New returns an initialized circular queue with the given capacity.
+// The capacity must be greater than 0; if not, it defaults to 1.
+func New[T any](capacity int) *Queue[T] {
+	return new(Queue[T]).init(max(capacity, 1))
+}
+
+// init initializes or clears queue q.
+// Capacity is clamped to at least 1 so Enqueue never divides by zero.
+func (q *Queue[T]) init(capacity int) *Queue[T] {
+	if capacity < 1 {
+		capacity = 1
+	}
+	q.values = make([]T, capacity)
+	q.first = 0
+	q.tail = 0
+	q.len = 0
+	q.cap = capacity
+	return q
+}
+
+// Empty checks if a queue is empty or not
+func (q *Queue[T]) Empty() bool {
+	return q.len == 0
+}
+
+// Full checks if a queue is full or not
+func (q *Queue[T]) Full() bool {
+	return q.len == q.cap
+}
+
+// Len returns the number of elements of queue q.
+// The complexity is O(1).
+func (q *Queue[T]) Len() int {
+	return q.len
+}
+
+// Cap returns the fixed capacity of queue q.
+func (q *Queue[T]) Cap() int {
+	return q.cap
+}
+
+// Values returns all values in queue (in FIFO order).
+func (q *Queue[T]) Values() []T {
+	if q.Empty() {
+		return nil
+	}
+	values := make([]T, 0, q.len)
+	if q.first < q.tail {
+		values = append(values, q.values[q.first:q.tail]...)
+		return values
+	}
+	values = append(values, q.values[q.first:]...)
+	values = append(values, q.values[:q.tail]...)
+	return values
+}
+
+// String returns the string representation of queue.
+// Ref: std fmt.Stringer.
+func (q *Queue[T]) String() string {
+	values, _ := jsonx.MarshalToString(q.Values())
+	return "CircularQueue: " + values
+}
+
+// MarshalJSON marshals queue into valid JSON.
+// Ref: std json.Marshaler.
+func (q *Queue[T]) MarshalJSON() ([]byte, error) {
+	return json.Marshal(q.Values())
+}
+
+// ErrOverCapacity is returned by UnmarshalJSON when the JSON array has more
+// elements than the queue's fixed capacity.
+var ErrOverCapacity = errors.New("circularqueue: data exceeds queue capacity")
+
+// UnmarshalJSON unmarshals a JSON description of queue.
+// The input can be assumed to be a valid encoding of a JSON value.
+// UnmarshalJSON must copy the JSON data if it wishes to retain the data after returning.
+// Ref: std json.Unmarshaler.
+//
+// The capacity of the queue is fixed at construction and is NOT changed here.
+// If the JSON array has more elements then q.cap, ErrOverCapacity is returned
+// and the queue is left unchanged. If the queue has not been initialized
+// (q.cap == 0), it is initialized to fit the incoming data (min 1).
+func (q *Queue[T]) UnmarshalJSON(data []byte) error {
+	var v []T
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+	if q.cap == 0 {
+		q.init(len(v))
+	} else if len(v) > q.cap {
+		return ErrOverCapacity
+	} else {
+		q.init(q.cap)
+	}
+	copy(q.values, v)
+	q.first = 0
+	// When len(v) == cap, tail wraps to 0 (same as first). This is correct because
+	// the queue uses the len field (not pointer comparison) to distinguish full from empty.
+	q.tail = len(v) % q.cap
+	q.len = len(v)
+	return nil
+}
+
+// Enqueue adds the value v to the end of queue and return true.
+// If queue is full, Enqueue do nothing and return false.
+func (q *Queue[T]) Enqueue(v T) bool {
+	if q.Full() {
+		return false
+	}
+	q.values[q.tail] = v
+	q.tail = (q.tail + 1) % q.cap
+	q.len++
+	return true
+}
+
+// Dequeue removes the first element if exists in queue and returns it.
+// The ok result indicates whether such element was removed from queue.
+func (q *Queue[T]) Dequeue() (value T, ok bool) {
+	if q.Empty() {
+		return
+	}
+	value = q.values[q.first]
+	var zero T
+	q.values[q.first] = zero // avoid memory leak
+	ok = true
+	q.first = (q.first + 1) % q.cap
+	q.len--
+	return
+}
+
+// Peek returns the first element if exists in queue without removing it.
+// The ok result indicates whether such element was found in queue.
+func (q *Queue[T]) Peek() (value T, ok bool) {
+	if q.Empty() {
+		return
+	}
+	value = q.values[q.first]
+	ok = true
+	return
+}
+
+// Clear removes all elements in queue.
+func (q *Queue[T]) Clear() {
+	q.init(q.cap)
+}

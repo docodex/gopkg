@@ -5,7 +5,7 @@ type Option func(s *Snowflake) error
 
 func WithNode(node int64) Option {
 	return func(s *Snowflake) error {
-		if node < 0 {
+		if node < 0 || node > maxNode {
 			return ErrOverNodeLimit
 		}
 		s.node = node
