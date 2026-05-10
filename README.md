@@ -48,6 +48,7 @@
   - [Skiplist](https://github.com/docodex/gopkg/tree/master/container/skiplist): skip list (skiplist)
 - [Jsonx](https://github.com/docodex/gopkg/tree/master/jsonx): JSON utilities based on gjson/sjson
 - [Recovery](https://github.com/docodex/gopkg/tree/master/recovery): Panic recovery helpers for deferred calls
+- [Retry](https://github.com/docodex/gopkg/tree/master/retry): Configurable retry with backoff, jitter, panic handling, and observability hooks
 - [Snowflake](https://github.com/docodex/gopkg/tree/master/snowflake): ID Generator in Twitter snowflake format
 - [Stringx](https://github.com/docodex/gopkg/tree/master/stringx): String utilities
 

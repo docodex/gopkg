@@ -19,9 +19,10 @@ package recovery
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"runtime/debug"
+
+	"github.com/docodex/gopkg/internal"
 )
 
 // CleanupFunc is the signature of a cleanup invoked after a panic
@@ -50,8 +51,8 @@ type CleanupFunc func(ctx context.Context)
 // If no panic is in flight, Recover is a no-op: cleanups are not
 // invoked and *err is not touched.
 func Recover(ctx context.Context, err *error, cleanups ...CleanupFunc) {
-	if e := recover(); e != nil {
-		recovered := wrapPanic(e)
+	if r := recover(); r != nil {
+		recovered := internal.WrapPanic(r)
 		if err != nil {
 			*err = recovered
 		}
@@ -72,24 +73,14 @@ func Recover(ctx context.Context, err *error, cleanups ...CleanupFunc) {
 // If no panic is in flight, Recovery is a no-op: cleanups are not
 // invoked.
 func Recovery(ctx context.Context, cleanups ...CleanupFunc) {
-	if e := recover(); e != nil {
-		recovered := wrapPanic(e)
+	if r := recover(); r != nil {
+		recovered := internal.WrapPanic(r)
 		slog.ErrorContext(ctx, "panic recovered",
 			"error", recovered,
 			"stack", string(debug.Stack()),
 		)
 		invoke(ctx, cleanups...)
 	}
-}
-
-// wrapPanic turns a recover() value into an error. If the panic value
-// is already an error, it is wrapped with %w so errors.Is / errors.As
-// continue to work; otherwise it is formatted with %v.
-func wrapPanic(e any) error {
-	if err, ok := e.(error); ok {
-		return fmt.Errorf("panic: %w", err)
-	}
-	return fmt.Errorf("panic: %v", e)
 }
 
 // invoke runs each non-nil cleanup in turn, isolating each call so
@@ -107,9 +98,9 @@ func invoke(ctx context.Context, cleanups ...CleanupFunc) {
 // inside the cleanup is logged but cannot leak out.
 func safeInvoke(ctx context.Context, cleanup CleanupFunc) {
 	defer func() {
-		if e := recover(); e != nil {
+		if r := recover(); r != nil {
 			slog.ErrorContext(ctx, "panic in recovery cleanup",
-				"error", wrapPanic(e),
+				"error", internal.WrapPanic(r),
 				"stack", string(debug.Stack()),
 			)
 		}
