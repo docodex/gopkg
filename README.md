@@ -47,6 +47,7 @@
     - [SinglyLinkedRing](https://github.com/docodex/gopkg/tree/master/container/ring/singlylinkedring): singly linked circular list
   - [Skiplist](https://github.com/docodex/gopkg/tree/master/container/skiplist): skip list (skiplist)
 - [Jsonx](https://github.com/docodex/gopkg/tree/master/jsonx): JSON utilities based on gjson/sjson
+- [Recovery](https://github.com/docodex/gopkg/tree/master/recovery): Panic recovery helpers for deferred calls
 - [Snowflake](https://github.com/docodex/gopkg/tree/master/snowflake): ID Generator in Twitter snowflake format
 - [Stringx](https://github.com/docodex/gopkg/tree/master/stringx): String utilities
 
