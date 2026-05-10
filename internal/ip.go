@@ -29,7 +29,7 @@ func PrivateIPv4() (net.IP, error) {
 }
 
 func isPrivateIPv4(ip net.IP) bool {
-	// Allow private IP addresses (RFC1918) and link-local addresses (RFC3927)
+	// Allow private IP addresses (RFC 1918) and link-local addresses (RFC 3927)
 	return ip != nil &&
 		(ip[0] == 10 || // 10.0.0.0 to 10.255.255.255
 			(ip[0] == 172 && ip[1] >= 16 && ip[1] < 32) || // 172.16.0.0 to 172.31.255.255

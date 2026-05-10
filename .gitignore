@@ -9,7 +9,7 @@
 *.test
 *.out
 
-# Go Workspace (library projects don't commit workspaces)
+# Go workspace (library projects don't commit workspaces)
 go.work
 go.work.sum
 

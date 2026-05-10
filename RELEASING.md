@@ -64,7 +64,7 @@ using tagged releases, not pseudo-versions - a release that depends on
 
 ## Cutting a Release
 
-Use a **annotated** tag (`-a`), never a lightweight one. Annotated tags
+Use an **annotated** tag (`-a`), never a lightweight one. Annotated tags
 carry author, date, and message, which `pkg.go.dev`, `GoProxy`, and
 GitHub all consume.
 
